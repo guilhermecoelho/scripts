@@ -21,5 +21,10 @@ iptables -A INPUT -p tcp --tcp-flags SYN,ACK,FIN,RST RST -m limit --limit 1/s -j
 iptables -A INPUT -p udp -s 0/0 -i eth1 --dport 33435:33525 -j DROP
 #Protecoes contra ataques
 iptables -A INPUT -m state --state INVALID -j DROP
+
+#habilita acesso aos containers
+iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to 10.0.3.93:3000
+iptables -A FORWARD -p tcp -d 10.0.3.93 --dport 80 -j ACCEPT
+
 #termina
 echo "Iptables Pronto"
