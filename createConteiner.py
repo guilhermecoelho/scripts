@@ -19,7 +19,7 @@ def createContainer():
     os.system("apt-get install lxd")
 
     os.system("lxc launch ubuntu:x "+containerName)
-
+ 
     #need wait a time to mapping container IP
     os.system("lxc list")
     time.sleep(10)
@@ -34,6 +34,8 @@ def createContainer():
     print "lxc exec "+containerName+" -- sudo apt-get install python"
     os.system("lxc exec "+containerName+" -- sudo apt-get install python")
 
+    os.system("iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to "+str(ipContainer)+":80")
+
 def configNginx():
     global containerName
     global ipContainer
@@ -44,10 +46,30 @@ def configNginx():
     print "lxc exec "+containerName+" -- sudo python /tmp/configNginx.py "+str(ipContainer)
     os.system("lxc exec "+containerName+" -- sudo python /tmp/configNginx.py "+str(ipContainer))
 
+def configMongo():
+    global containerName
+    global ipContainer
 
-createContainer()
-configNginx()
+    os.system("lxc file push /tmp/script/configMongo.py  "+containerName+"/tmp/configMongo.py")
+    os.system("lxc exec "+containerName+" -- sudo python /tmp/configMongo.py "+str(ipContainer))
 
-os.system("iptables -t nat -A PREROUTING -i eth0 -p tcp --dport 80 -j DNAT --to "+str(ipContainer)+":80")
+def start():
+    print("Select Option: \n 1 - nginx\n 2 - mongodb\n 3 - all")
+    option = raw_input()
+
+    if option == "1":
+        createContainer()
+        configNginx()
+    if option == "2":
+        createContainer()
+        configMongo()
+    if option == "3":
+        createContainer()
+        configNginx()
+        createContainer()
+        configMongo()
+
+
+start()
 
 os.system("rm -r /tmp/script/")
